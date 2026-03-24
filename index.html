@@ -1,0 +1,657 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="ゴミ出し">
+<link rel="apple-touch-icon" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxODAgMTgwIj48cmVjdCB3aWR0aD0iMTgwIiBoZWlnaHQ9IjE4MCIgcng9IjQwIiBmaWxsPSIjMkQ1QTQ1Ii8+PHRleHQgeD0iOTAiIHk9IjEyMCIgZm9udC1zaXplPSI5MCIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZmlsbD0id2hpdGUiPvCXl7Y8L3RleHQ+PC9zdmc+">
+<meta name="theme-color" content="#2D5A45">
+<title>鎌倉ゴミ出しカレンダー</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@400;500;700&display=swap');
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  :root {
+    --bg: #F5F1EB;
+    --card-bg: #FFFFFF;
+    --text: #2C2C2C;
+    --text-light: #7A7A7A;
+    --accent: #2D5A45;
+    --accent-light: #E8F0EC;
+    --burn: #E8734A;
+    --burn-light: #FFF0EB;
+    --paper: #5B8DBE;
+    --paper-light: #EBF2F8;
+    --danger: #C94C4C;
+    --danger-light: #FCEAEA;
+    --plastic-product: #9B6BB0;
+    --plastic-product-light: #F4EDF7;
+    --pet: #4AAA6D;
+    --pet-light: #E8F5ED;
+    --container: #E8A735;
+    --container-light: #FFF6E5;
+    --shadow: 0 2px 12px rgba(0,0,0,0.06);
+    --radius: 16px;
+  }
+
+  body {
+    font-family: 'Zen Maru Gothic', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    min-height: 100dvh;
+    padding: env(safe-area-inset-top) 16px env(safe-area-inset-bottom) 16px;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .header {
+    text-align: center;
+    padding: 24px 0 8px;
+  }
+  .header h1 {
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--accent);
+    letter-spacing: 0.5px;
+  }
+  .header .location {
+    font-size: 12px;
+    color: var(--text-light);
+    margin-top: 2px;
+  }
+
+  .today-section {
+    margin: 16px 0;
+  }
+  .date-display {
+    font-size: 13px;
+    color: var(--text-light);
+    margin-bottom: 8px;
+    padding-left: 4px;
+  }
+
+  .today-card {
+    background: var(--card-bg);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    padding: 20px;
+    position: relative;
+    overflow: hidden;
+  }
+  .today-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 4px;
+    background: var(--accent);
+  }
+  .today-card.has-garbage::before {
+    background: var(--burn);
+  }
+
+  .today-label {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    color: var(--text-light);
+    margin-bottom: 12px;
+    font-weight: 500;
+  }
+
+  .today-items {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .garbage-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px;
+    border-radius: 12px;
+    transition: transform 0.15s ease;
+  }
+  .garbage-item:active {
+    transform: scale(0.98);
+  }
+
+  .garbage-icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 22px;
+    flex-shrink: 0;
+  }
+
+  .garbage-info h3 {
+    font-size: 15px;
+    font-weight: 700;
+    line-height: 1.3;
+  }
+  .garbage-info p {
+    font-size: 12px;
+    color: var(--text-light);
+    margin-top: 2px;
+    line-height: 1.4;
+  }
+
+  .no-garbage {
+    text-align: center;
+    padding: 20px 0;
+    color: var(--text-light);
+    font-size: 14px;
+  }
+  .no-garbage .emoji {
+    font-size: 36px;
+    display: block;
+    margin-bottom: 8px;
+  }
+
+  .week-section {
+    margin: 24px 0;
+  }
+  .section-title {
+    font-size: 13px;
+    color: var(--text-light);
+    margin-bottom: 10px;
+    padding-left: 4px;
+    font-weight: 500;
+  }
+
+  .week-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 4px;
+  }
+
+  .day-cell {
+    background: var(--card-bg);
+    border-radius: 12px;
+    padding: 8px 2px;
+    text-align: center;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+    min-height: 90px;
+    position: relative;
+    transition: transform 0.15s ease;
+  }
+  .day-cell:active {
+    transform: scale(0.95);
+  }
+  .day-cell.is-today {
+    box-shadow: 0 0 0 2px var(--accent), var(--shadow);
+  }
+  .day-cell.is-past {
+    opacity: 0.4;
+  }
+
+  .day-name {
+    font-size: 10px;
+    color: var(--text-light);
+    font-weight: 500;
+  }
+  .day-number {
+    font-size: 16px;
+    font-weight: 700;
+    margin: 2px 0 6px;
+  }
+  .day-cell.is-today .day-number {
+    color: var(--accent);
+  }
+  .day-cell.is-sunday .day-name,
+  .day-cell.is-sunday .day-number {
+    color: var(--danger);
+  }
+  .day-cell.is-saturday .day-name,
+  .day-cell.is-saturday .day-number {
+    color: var(--paper);
+  }
+
+  .day-dots {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 3px;
+  }
+  .day-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+  }
+
+  .schedule-section {
+    margin: 24px 0 32px;
+  }
+
+  .schedule-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .schedule-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: var(--card-bg);
+    border-radius: 12px;
+    padding: 14px 16px;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+  }
+
+  .schedule-dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  .schedule-text {
+    flex: 1;
+  }
+  .schedule-text h4 {
+    font-size: 14px;
+    font-weight: 700;
+  }
+  .schedule-text p {
+    font-size: 12px;
+    color: var(--text-light);
+    margin-top: 1px;
+  }
+
+  .schedule-day {
+    font-size: 12px;
+    color: var(--text-light);
+    font-weight: 500;
+    text-align: right;
+    flex-shrink: 0;
+  }
+
+  .note-card {
+    background: #FFF9EC;
+    border-radius: var(--radius);
+    padding: 16px;
+    margin: 16px 0;
+    border-left: 4px solid var(--container);
+  }
+  .note-card h4 {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--container);
+    margin-bottom: 6px;
+  }
+  .note-card ul {
+    list-style: none;
+    padding: 0;
+  }
+  .note-card li {
+    font-size: 12px;
+    color: var(--text);
+    line-height: 1.6;
+    padding-left: 14px;
+    position: relative;
+  }
+  .note-card li::before {
+    content: '⚠';
+    position: absolute;
+    left: 0;
+    font-size: 10px;
+  }
+
+  .footer {
+    text-align: center;
+    padding: 16px 0 32px;
+    font-size: 11px;
+    color: var(--text-light);
+  }
+
+  /* Animations */
+  @keyframes slideUp {
+    from { opacity: 0; transform: translateY(12px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .today-section { animation: slideUp 0.4s ease; }
+  .week-section { animation: slideUp 0.4s ease 0.1s both; }
+  .schedule-section { animation: slideUp 0.4s ease 0.2s both; }
+
+  /* Detail modal */
+  .modal-overlay {
+    display: none;
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0,0,0,0.4);
+    z-index: 100;
+    align-items: flex-end;
+    justify-content: center;
+    animation: fadeIn 0.2s ease;
+  }
+  .modal-overlay.active {
+    display: flex;
+  }
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+  .modal-content {
+    background: var(--card-bg);
+    border-radius: 20px 20px 0 0;
+    padding: 24px 20px calc(env(safe-area-inset-bottom) + 24px);
+    width: 100%;
+    max-width: 500px;
+    max-height: 70vh;
+    overflow-y: auto;
+    animation: slideUpModal 0.3s ease;
+  }
+  @keyframes slideUpModal {
+    from { transform: translateY(100%); }
+    to { transform: translateY(0); }
+  }
+  .modal-handle {
+    width: 36px;
+    height: 4px;
+    background: #DDD;
+    border-radius: 2px;
+    margin: 0 auto 16px;
+  }
+  .modal-title {
+    font-size: 18px;
+    font-weight: 700;
+    margin-bottom: 12px;
+  }
+  .modal-detail {
+    font-size: 14px;
+    line-height: 1.8;
+    color: var(--text);
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>🗑 鎌倉ゴミ出し</h1>
+  <div class="location">鎌倉市</div>
+</div>
+
+<div class="today-section">
+  <div class="date-display" id="dateDisplay"></div>
+  <div class="today-card" id="todayCard">
+    <div class="today-label">今日のゴミ出し</div>
+    <div class="today-items" id="todayItems"></div>
+  </div>
+</div>
+
+<div class="week-section">
+  <div class="section-title">今週のスケジュール</div>
+  <div class="week-grid" id="weekGrid"></div>
+</div>
+
+<div class="schedule-section">
+  <div class="section-title">ゴミ出し一覧</div>
+  <div class="schedule-list" id="scheduleList"></div>
+
+  <div class="note-card">
+    <h4>注意ポイント</h4>
+    <ul>
+      <li>燃やすごみは<b>指定袋（グレー）</b>が必要</li>
+      <li>火曜日は週によって内容が変わる（紙/危険物/製品プラ）</li>
+      <li>「製品プラスチック」と「容器包装プラスチック」は別物</li>
+    </ul>
+  </div>
+</div>
+
+<div class="footer">
+  岩男家 鎌倉ゴミ出しカレンダー
+</div>
+
+<div class="modal-overlay" id="modal">
+  <div class="modal-content">
+    <div class="modal-handle"></div>
+    <div class="modal-title" id="modalTitle"></div>
+    <div class="modal-detail" id="modalDetail"></div>
+  </div>
+</div>
+
+<script>
+const GARBAGE_TYPES = {
+  burn: {
+    name: '燃やすごみ',
+    icon: '🔥',
+    color: '#E8734A',
+    colorLight: '#FFF0EB',
+    detail: '指定袋（グレー）に入れて出す。生ごみ、紙くず、衣類、ゴム・革製品など。\n\n⚠ 必ず鎌倉市指定のグレーの袋を使うこと。'
+  },
+  paper: {
+    name: '紙・段ボール',
+    icon: '📦',
+    color: '#5B8DBE',
+    colorLight: '#EBF2F8',
+    detail: '新聞・雑誌・段ボール・紙パックなど。種類ごとにまとめてヒモで縛る。\n\n段ボールは畳んで十字にしばる。紙パックは洗って開いて乾かす。'
+  },
+  danger: {
+    name: '危険物',
+    icon: '⚠️',
+    color: '#C94C4C',
+    colorLight: '#FCEAEA',
+    detail: 'スプレー缶・ライター・蛍光灯・乾電池・刃物など。\n\nスプレー缶は必ず中身を使い切ってから。刃物は紙で包んで「キケン」と書く。'
+  },
+  plastic_product: {
+    name: '製品プラスチック',
+    icon: '🧴',
+    color: '#9B6BB0',
+    colorLight: '#F4EDF7',
+    detail: 'プラスチック素材でできた「製品」そのもの。バケツ、洗面器、おもちゃ、CDケース、ハンガーなど。\n\n⚠「容器包装プラスチック」とは別物。こちらは製品自体がプラスチックのもの。'
+  },
+  pet: {
+    name: 'ペットボトル',
+    icon: '🫙',
+    color: '#4AAA6D',
+    colorLight: '#E8F5ED',
+    detail: 'ペットボトルはキャップとラベルを外して軽くすすいでから。キャップとラベルは「容器包装プラ」へ。'
+  },
+  garden: {
+    name: '庭ごみ',
+    icon: '🌿',
+    color: '#4AAA6D',
+    colorLight: '#E8F5ED',
+    detail: '剪定枝・落ち葉・草など。50cm以内に切って束ねるか、透明・半透明の袋に入れる。'
+  },
+  container: {
+    name: '容器包装プラ',
+    icon: '♻️',
+    color: '#E8A735',
+    colorLight: '#FFF6E5',
+    detail: '食品トレイ、レジ袋、お菓子の袋、ペットボトルのキャップ・ラベルなど、「プラ」マークがついた包装材。\n\n軽くすすいで汚れを落としてから出す。'
+  },
+  can: {
+    name: 'カン',
+    icon: '🥫',
+    color: '#E8A735',
+    colorLight: '#FFF6E5',
+    detail: 'アルミ缶・スチール缶。中を軽くすすいで出す。つぶさなくてOK。'
+  },
+  bottle: {
+    name: 'ビン',
+    icon: '🍶',
+    color: '#E8A735',
+    colorLight: '#FFF6E5',
+    detail: 'ガラスびん。キャップを外して中をすすぐ。割れたビンは「燃やさないごみ」へ。'
+  }
+};
+
+const DAY_NAMES = ['日', '月', '火', '水', '木', '金', '土'];
+
+function getTuesdayType(date) {
+  const d = new Date(date);
+  const firstDay = new Date(d.getFullYear(), d.getMonth(), 1);
+  let tuesdayCount = 0;
+  for (let i = 1; i <= d.getDate(); i++) {
+    const check = new Date(d.getFullYear(), d.getMonth(), i);
+    if (check.getDay() === 2) tuesdayCount++;
+  }
+  if (tuesdayCount === 1) return 'danger';      // 第1火曜
+  if (tuesdayCount === 4) return 'plastic_product'; // 第4火曜
+  return 'paper'; // 通常の火曜（第2, 3, 5）
+}
+
+function getGarbageForDate(date) {
+  const d = new Date(date);
+  const dow = d.getDay();
+  const items = [];
+
+  switch (dow) {
+    case 1: // 月
+    case 4: // 木
+      items.push('burn');
+      break;
+    case 2: // 火
+      items.push(getTuesdayType(d));
+      break;
+    case 3: // 水
+      items.push('pet', 'garden');
+      break;
+    case 5: // 金
+      items.push('container', 'can', 'bottle');
+      break;
+  }
+  return items;
+}
+
+function formatDate(date) {
+  const d = new Date(date);
+  const y = d.getFullYear();
+  const m = d.getMonth() + 1;
+  const day = d.getDate();
+  const dow = DAY_NAMES[d.getDay()];
+  return `${y}年${m}月${day}日（${dow}）`;
+}
+
+function isSameDay(a, b) {
+  return a.getFullYear() === b.getFullYear() &&
+         a.getMonth() === b.getMonth() &&
+         a.getDate() === b.getDate();
+}
+
+function renderToday() {
+  const now = new Date();
+  document.getElementById('dateDisplay').textContent = formatDate(now);
+
+  const items = getGarbageForDate(now);
+  const container = document.getElementById('todayItems');
+  const card = document.getElementById('todayCard');
+
+  if (items.length === 0) {
+    container.innerHTML = '<div class="no-garbage"><span class="emoji">😴</span>今日はゴミ出しなし</div>';
+    return;
+  }
+
+  card.classList.add('has-garbage');
+  container.innerHTML = items.map(key => {
+    const g = GARBAGE_TYPES[key];
+    return `
+      <div class="garbage-item" style="background:${g.colorLight}" onclick="showDetail('${key}')">
+        <div class="garbage-icon" style="background:${g.color}22">${g.icon}</div>
+        <div class="garbage-info">
+          <h3 style="color:${g.color}">${g.name}</h3>
+          <p>タップで詳細を確認</p>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+function renderWeek() {
+  const now = new Date();
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const dow = today.getDay();
+  const monday = new Date(today);
+  monday.setDate(today.getDate() - ((dow + 6) % 7));
+
+  const grid = document.getElementById('weekGrid');
+  grid.innerHTML = '';
+
+  for (let i = 0; i < 7; i++) {
+    const d = new Date(monday);
+    d.setDate(monday.getDate() + i);
+    const items = getGarbageForDate(d);
+    const isToday = isSameDay(d, today);
+    const isPast = d < today;
+    const dayOfWeek = d.getDay();
+
+    let classes = 'day-cell';
+    if (isToday) classes += ' is-today';
+    if (isPast) classes += ' is-past';
+    if (dayOfWeek === 0) classes += ' is-sunday';
+    if (dayOfWeek === 6) classes += ' is-saturday';
+
+    const dots = items.map(key => {
+      const g = GARBAGE_TYPES[key];
+      return `<div class="day-dot" style="background:${g.color}"></div>`;
+    }).join('');
+
+    grid.innerHTML += `
+      <div class="${classes}">
+        <div class="day-name">${DAY_NAMES[dayOfWeek]}</div>
+        <div class="day-number">${d.getDate()}</div>
+        <div class="day-dots">${dots}</div>
+      </div>
+    `;
+  }
+}
+
+function renderSchedule() {
+  const schedules = [
+    { keys: ['burn'], day: '月・木' },
+    { keys: ['paper'], day: '火（通常）' },
+    { keys: ['danger'], day: '第1火曜' },
+    { keys: ['plastic_product'], day: '第4火曜' },
+    { keys: ['pet', 'garden'], day: '水' },
+    { keys: ['container', 'can', 'bottle'], day: '金' },
+  ];
+
+  const list = document.getElementById('scheduleList');
+  list.innerHTML = schedules.map(s => {
+    const primary = GARBAGE_TYPES[s.keys[0]];
+    const names = s.keys.map(k => GARBAGE_TYPES[k].name).join('・');
+    return `
+      <div class="schedule-row" onclick="showDetail('${s.keys[0]}')">
+        <div class="schedule-dot" style="background:${primary.color}"></div>
+        <div class="schedule-text">
+          <h4>${names}</h4>
+        </div>
+        <div class="schedule-day">${s.day}</div>
+      </div>
+    `;
+  }).join('');
+}
+
+function showDetail(key) {
+  const g = GARBAGE_TYPES[key];
+  document.getElementById('modalTitle').textContent = g.icon + ' ' + g.name;
+  document.getElementById('modalDetail').innerHTML = g.detail.replace(/\n/g, '<br>');
+  document.getElementById('modal').classList.add('active');
+}
+
+document.getElementById('modal').addEventListener('click', function(e) {
+  if (e.target === this) {
+    this.classList.remove('active');
+  }
+});
+
+// Init
+renderToday();
+renderWeek();
+renderSchedule();
+
+// Service Worker registration for PWA
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('sw.js').catch(() => {});
+}
+</script>
+</body>
+</html>
